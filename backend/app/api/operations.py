@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.operation import Operation
+from sqlalchemy import select
 from ..models.account import BankAccount
 from ..models.share import AccountShare
 from ..models.enums import PermissionLevel, OperationType
@@ -35,7 +36,7 @@ async def list_operations(
     """Liste les opérations visibles par l’utilisateur. Optionnellement filtré par compte."""
     # Récupérer les comptes accessibles
     acc_ids = []
-    q_owned = BankAccount.__table__.select().where(BankAccount.owner_id == current_user.id)
+    q_owned = select(BankAccount).where(BankAccount.owner_id == current_user.id)
     res_owned = await db.execute(q_owned)
     acc_ids += [acc.id for acc in res_owned.scalars().all()]
     q_shared = (
@@ -55,7 +56,7 @@ async def list_operations(
     if not acc_filter:
         return []
     result = await db.execute(
-        Operation.__table__.select().where(Operation.account_id.in_(acc_filter))
+        select(Operation).where(Operation.account_id.in_(acc_filter))
     )
     return result.scalars().all()
 
@@ -75,9 +76,9 @@ async def create_operation(
         raise HTTPException(status_code=403, detail="Admin cannot create operations")
     # Vérifier que le compte existe
     result_acc = await db.execute(
-        BankAccount.__table__.select().where(BankAccount.id == op_in.account_id)
+        select(BankAccount).where(BankAccount.id == op_in.account_id)
     )
-    account = result_acc.scalar_one_or_none()
+    account = result_acc.scalars().first()
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")
     # Vérifier la propriété ou le partage
@@ -87,11 +88,11 @@ async def create_operation(
     else:
         # Vérifier le partage
         result_share = await db.execute(
-            AccountShare.__table__.select()
+            select(AccountShare)
             .where(AccountShare.account_id == op_in.account_id)
             .where(AccountShare.user_id == current_user.id)
         )
-        share = result_share.scalar_one_or_none()
+        share = result_share.scalars().first()
         if share and _has_permission_to_add(current_user, share.permission):
             allowed = True
     if not allowed:

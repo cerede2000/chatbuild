@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.account import BankAccount
+from sqlalchemy import select
 from ..models.share import AccountShare
 from ..models.user import User
 from ..models.enums import PermissionLevel
@@ -21,7 +22,7 @@ router = APIRouter()
 async def list_accounts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)) -> list[BankAccount]:
     """Retourne la liste des comptes accessibles à l’utilisateur courant."""
     # Comptes dont l’utilisateur est propriétaire
-    q1 = BankAccount.__table__.select().where(BankAccount.owner_id == current_user.id)
+    q1 = select(BankAccount).where(BankAccount.owner_id == current_user.id)
     result1 = await db.execute(q1)
     owned = result1.scalars().all()
     # Comptes partagés
@@ -81,9 +82,9 @@ async def share_account(
     """
     # Vérifier l’existence du compte et la propriété
     result = await db.execute(
-        BankAccount.__table__.select().where(BankAccount.id == account_id)
+        select(BankAccount).where(BankAccount.id == account_id)
     )
-    account = result.scalar_one_or_none()
+    account = result.scalars().first()
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found")
     if account.owner_id != current_user.id:
@@ -96,11 +97,11 @@ async def share_account(
         raise HTTPException(status_code=400, detail="Invalid permission")
     # Vérifier si déjà partagé
     exists = await db.execute(
-        AccountShare.__table__.select()
+        select(AccountShare)
         .where(AccountShare.account_id == account_id)
         .where(AccountShare.user_id == share_in.user_id)
     )
-    share = exists.scalar_one_or_none()
+    share = exists.scalars().first()
     if share:
         # Mise à jour de la permission
         share.permission = share_in.permission

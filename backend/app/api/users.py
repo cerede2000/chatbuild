@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.user import User
+from sqlalchemy import select
 from ..core.security import get_password_hash
 from ..schemas.user import UserCreate, UserRead, UserUpdate
 from .deps import require_admin
@@ -18,7 +19,7 @@ router = APIRouter()
 @router.get("/users", response_model=list[UserRead])
 async def list_users(db: AsyncSession = Depends(get_session), current_admin: User = Depends(require_admin)) -> list[UserRead]:
     """Renvoie la liste de tous les utilisateurs."""
-    result = await db.execute(User.__table__.select())
+    result = await db.execute(select(User))
     users = result.scalars().all()
     return users
 
@@ -31,8 +32,8 @@ async def create_user(
 ) -> User:
     """Crée un nouvel utilisateur (admin uniquement)."""
     # Vérifier l’unicité du nom
-    exists = await db.execute(User.__table__.select().where(User.username == user_in.username))
-    if exists.scalar_one_or_none():
+    exists = await db.execute(select(User).where(User.username == user_in.username))
+    if exists.scalars().first():
         raise HTTPException(status_code=400, detail="Username already exists")
     user = User(
         username=user_in.username,
@@ -53,8 +54,8 @@ async def update_user(
     current_admin: User = Depends(require_admin),
 ) -> User:
     """Met à jour les informations d’un utilisateur (admin uniquement)."""
-    result = await db.execute(User.__table__.select().where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     if user_in.password:

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.recurring import RecurringItem
+from sqlalchemy import select
 from ..models.account import BankAccount
 from ..models.share import AccountShare
 from ..models.enums import PermissionLevel
@@ -35,7 +36,7 @@ async def list_recurring(
     # Déterminer les comptes accessibles
     acc_ids = []
     res_owned = await db.execute(
-        BankAccount.__table__.select().where(BankAccount.owner_id == current_user.id)
+        select(BankAccount).where(BankAccount.owner_id == current_user.id)
     )
     acc_ids += [acc.id for acc in res_owned.scalars().all()]
     res_shared = await db.execute(
@@ -56,7 +57,7 @@ async def list_recurring(
     if not acc_filter:
         return []
     result = await db.execute(
-        RecurringItem.__table__.select().where(RecurringItem.account_id.in_(acc_filter))
+        select(RecurringItem).where(RecurringItem.account_id.in_(acc_filter))
     )
     return result.scalars().all()
 
@@ -76,9 +77,9 @@ async def create_recurring(
         raise HTTPException(status_code=403, detail="Admin cannot create recurring items")
     # Vérifier que le compte existe
     res_acc = await db.execute(
-        BankAccount.__table__.select().where(BankAccount.id == rec_in.account_id)
+        select(BankAccount).where(BankAccount.id == rec_in.account_id)
     )
-    account = res_acc.scalar_one_or_none()
+    account = res_acc.scalars().first()
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")
     # Vérifier permission
@@ -87,11 +88,11 @@ async def create_recurring(
         allowed = True
     else:
         res_share = await db.execute(
-            AccountShare.__table__.select()
+            select(AccountShare)
             .where(AccountShare.account_id == rec_in.account_id)
             .where(AccountShare.user_id == current_user.id)
         )
-        share = res_share.scalar_one_or_none()
+        share = res_share.scalars().first()
         if share and _has_permission_to_add_recurring(current_user, share.permission):
             allowed = True
     if not allowed:

@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.user import User
+from sqlalchemy import select
 from ..core.security import decode_token
 
 
@@ -43,9 +44,9 @@ async def get_current_user(
         )
     username: str = payload.get("sub")
     result = await db.execute(
-        User.__table__.select().where(User.username == username)
+        select(User).where(User.username == username)
     )
-    user = result.scalar_one_or_none()
+    user = result.scalars().first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     if user.disabled:

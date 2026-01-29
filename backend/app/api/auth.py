@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_session
 from ..models.user import User
 from ..core.security import verify_password, get_password_hash, create_token
+from sqlalchemy import select
 from ..core.config import settings
 from ..schemas.token import Token
 
@@ -35,9 +36,9 @@ async def login(
     automatiquement renvoyé par le client lors des requêtes suivantes.
     """
     result = await db.execute(
-        User.__table__.select().where(User.username == data.username)
+        select(User).where(User.username == data.username)
     )
-    user: User | None = result.scalar_one_or_none()
+    user: User | None = result.scalars().first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
