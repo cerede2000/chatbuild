@@ -34,9 +34,6 @@ RUN pip install --no-cache-dir --upgrade pip \
 FROM python:3.12-slim
 WORKDIR /app
 
-# Création d’un utilisateur non‑root
-RUN groupadd -g 1001 appuser && useradd -u 1001 -g appuser -m appuser
-
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
@@ -52,11 +49,12 @@ COPY backend/alembic.ini ./alembic.ini
 # Copie des assets frontend compilés dans un répertoire statique servi par FastAPI
 COPY --from=frontend-builder /frontend/dist ./static
 
-# Copie d’un point d’entrée pour lancer les migrations et l’application
+# Copie du script d’entrée et le rend exécutable
 COPY backend/entrypoint.sh ./entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-USER appuser
+# Crée le répertoire de données (accessible en écriture par root)
+RUN mkdir -p /app/data
 
 EXPOSE 8000
 

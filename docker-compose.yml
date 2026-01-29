@@ -10,7 +10,8 @@ services:
       - data:/app/data
     environment:
       # URL de connexion à la base. Utilise SQLite dans un volume Docker.
-      - DATABASE_URL=sqlite+aiosqlite:///app/data/db.sqlite3
+      # Utilise un chemin absolu (quatre slashs après le schéma) pour la base SQLite
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/db.sqlite3
       # Secret pour signer les JWT (peut être laissé vide, un secret aléatoire sera généré).
       - SECRET_KEY=${SECRET_KEY:-}
       # Identifiant de l’utilisateur administrateur
