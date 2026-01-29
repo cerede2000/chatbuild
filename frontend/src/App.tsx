@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
+import AdminUsers from './pages/AdminUsers';
 import { AuthProvider, AuthContext } from './providers/AuthProvider';
 
 const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
@@ -23,6 +24,14 @@ const App: React.FC = () => {
           element={
             <PrivateRoute>
               <Accounts />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <PrivateRoute>
+              <AdminUsers />
             </PrivateRoute>
           }
         />

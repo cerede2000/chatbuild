@@ -16,7 +16,8 @@ const Login: React.FC = () => {
     try {
       const payload: LoginRequest = { username, password };
       await login(payload);
-      setAuthenticated(true);
+      // Stocke le nom d’utilisateur pour déterminer le rôle (admin vs user)
+      setAuthenticated(true, username);
       navigate('/');
     } catch (err) {
       setError('Invalid credentials');

@@ -17,6 +17,16 @@ ChatBuild est une application web de suivi de budget multicomptes. Elle permet a
 - **Frontend React** : une interface minimale (login, tableau de bord et liste des comptes) construite avec Vite, TypeScript et Tailwind CSS.
 - **CI/CD GitHub Actions** : lint et tests automatiques, build multi‑stage Docker et publication de l’image sur GitHub Container Registry (`ghcr.io/cerede2000/chatbuild`).
 
+## Nouveautés de la version 0.2
+
+Cette version apporte les améliorations suivantes :
+
+- **Gestion des utilisateurs en interface** : l’administrateur peut accéder à une page `/admin/users` pour lister tous les utilisateurs et en créer de nouveaux. Les comptes utilisateurs ne peuvent pas être créés via l’interface par les utilisateurs eux‑mêmes.
+- **Enrichissement du contexte d’authentification** : le frontend conserve désormais le nom d’utilisateur connecté et détermine s’il est administrateur pour adapter l’interface (par exemple afficher le lien « Gérer les utilisateurs »).
+- **Hachage de mots de passe simplifié** : migration de `bcrypt` vers `pbkdf2_sha256`, éliminant les dépendances natives et les limitations de longueur de mot de passe.
+- **Requêtes SQLAlchemy corrigées** : l’utilisation systématique de `select()` garantit la récupération d’objets ORM complets et évite les erreurs lors de l’authentification et de la gestion des entités.
+- **Navigation améliorée** : un lien vers la gestion des utilisateurs apparaît dans le tableau de bord pour les administrateurs.
+
 ## Mise en route rapide
 
 ### Prérequis

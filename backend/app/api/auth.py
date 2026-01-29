@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_session
 from ..models.user import User
 from ..core.security import verify_password, get_password_hash, create_token
-from sqlalchemy import select
 from ..core.config import settings
 from ..schemas.token import Token
 
@@ -35,9 +34,10 @@ async def login(
     Le token est également envoyé dans un cookie HttpOnly pour être
     automatiquement renvoyé par le client lors des requêtes suivantes.
     """
-    result = await db.execute(
-        select(User).where(User.username == data.username)
-    )
+    # Récupère l’objet User complet plutôt qu’une seule colonne
+    from sqlalchemy import select
+
+    result = await db.execute(select(User).where(User.username == data.username))
     user: User | None = result.scalars().first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(

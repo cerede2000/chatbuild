@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.recurring import RecurringItem
-from sqlalchemy import select
 from ..models.account import BankAccount
 from ..models.share import AccountShare
 from ..models.enums import PermissionLevel
@@ -35,16 +34,15 @@ async def list_recurring(
     """Liste les items récurrents visibles par l’utilisateur."""
     # Déterminer les comptes accessibles
     acc_ids = []
+    from sqlalchemy import select
     res_owned = await db.execute(
         select(BankAccount).where(BankAccount.owner_id == current_user.id)
     )
     acc_ids += [acc.id for acc in res_owned.scalars().all()]
     res_shared = await db.execute(
-        (
-            BankAccount.__table__.join(AccountShare, BankAccount.id == AccountShare.account_id)
-            .select()
-            .where(AccountShare.user_id == current_user.id)
-        )
+        select(BankAccount)
+        .join(AccountShare, BankAccount.id == AccountShare.account_id)
+        .where(AccountShare.user_id == current_user.id)
     )
     acc_ids += [acc.id for acc in res_shared.scalars().all()]
     acc_ids = list(set(acc_ids))
@@ -76,6 +74,7 @@ async def create_recurring(
     if current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin cannot create recurring items")
     # Vérifier que le compte existe
+    from sqlalchemy import select
     res_acc = await db.execute(
         select(BankAccount).where(BankAccount.id == rec_in.account_id)
     )

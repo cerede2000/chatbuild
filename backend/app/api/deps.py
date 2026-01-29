@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.user import User
-from sqlalchemy import select
 from ..core.security import decode_token
 
 
@@ -43,9 +42,10 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     username: str = payload.get("sub")
-    result = await db.execute(
-        select(User).where(User.username == username)
-    )
+    # Utilise la requête ORM complète pour récupérer un objet User mappé.
+    from sqlalchemy import select
+
+    result = await db.execute(select(User).where(User.username == username))
     user = result.scalars().first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")

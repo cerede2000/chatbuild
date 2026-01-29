@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.operation import Operation
-from sqlalchemy import select
 from ..models.account import BankAccount
 from ..models.share import AccountShare
 from ..models.enums import PermissionLevel, OperationType
@@ -36,12 +35,15 @@ async def list_operations(
     """Liste les opérations visibles par l’utilisateur. Optionnellement filtré par compte."""
     # Récupérer les comptes accessibles
     acc_ids = []
+    from sqlalchemy import select
+    # Récupérer les comptes dont l'utilisateur est propriétaire
     q_owned = select(BankAccount).where(BankAccount.owner_id == current_user.id)
     res_owned = await db.execute(q_owned)
     acc_ids += [acc.id for acc in res_owned.scalars().all()]
+    # Récupérer les comptes partagés
     q_shared = (
-        BankAccount.__table__.join(AccountShare, BankAccount.id == AccountShare.account_id)
-        .select()
+        select(BankAccount)
+        .join(AccountShare, BankAccount.id == AccountShare.account_id)
         .where(AccountShare.user_id == current_user.id)
     )
     res_shared = await db.execute(q_shared)
@@ -55,9 +57,7 @@ async def list_operations(
         acc_filter = acc_ids
     if not acc_filter:
         return []
-    result = await db.execute(
-        select(Operation).where(Operation.account_id.in_(acc_filter))
-    )
+    result = await db.execute(select(Operation).where(Operation.account_id.in_(acc_filter)))
     return result.scalars().all()
 
 
@@ -75,9 +75,8 @@ async def create_operation(
     if current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin cannot create operations")
     # Vérifier que le compte existe
-    result_acc = await db.execute(
-        select(BankAccount).where(BankAccount.id == op_in.account_id)
-    )
+    from sqlalchemy import select
+    result_acc = await db.execute(select(BankAccount).where(BankAccount.id == op_in.account_id))
     account = result_acc.scalars().first()
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")

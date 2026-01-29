@@ -44,4 +44,35 @@ export const createAccount = async (data: CreateAccountRequest) => {
   return res.data;
 };
 
+// -------- Gestion des utilisateurs (admin seulement) --------
+
+export interface User {
+  id: number;
+  username: string;
+  is_admin: boolean;
+  disabled: boolean;
+}
+
+export interface CreateUserRequest {
+  username: string;
+  password: string;
+  is_admin?: boolean;
+}
+
+/**
+ * Récupère la liste de tous les utilisateurs (requiert un admin authentifié).
+ */
+export const fetchUsers = async (): Promise<User[]> => {
+  const res = await api.get('/users');
+  return res.data;
+};
+
+/**
+ * Crée un nouvel utilisateur (requiert un admin authentifié).
+ */
+export const createUser = async (data: CreateUserRequest): Promise<User> => {
+  const res = await api.post('/users', data);
+  return res.data;
+};
+
 export default api;

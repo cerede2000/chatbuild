@@ -18,7 +18,8 @@ router = APIRouter()
 @router.get("/categories", response_model=list[CategoryRead])
 async def list_categories(db: AsyncSession = Depends(get_session)) -> list[Category]:
     """Liste toutes les catégories non supprimées."""
-    result = await db.execute(Category.__table__.select().where(Category.deleted.is_(False)))
+    from sqlalchemy import select
+    result = await db.execute(select(Category).where(Category.deleted.is_(False)))
     return result.scalars().all()
 
 
@@ -29,8 +30,9 @@ async def create_category(
     current_user: User = Depends(get_current_user),
 ) -> Category:
     """Crée une catégorie (accessible à tous les utilisateurs)."""
-    exists = await db.execute(Category.__table__.select().where(Category.name == category_in.name))
-    if exists.scalar_one_or_none():
+    from sqlalchemy import select
+    exists = await db.execute(select(Category).where(Category.name == category_in.name))
+    if exists.scalars().first():
         raise HTTPException(status_code=400, detail="Category already exists")
     cat = Category(name=category_in.name)
     db.add(cat)
@@ -47,8 +49,9 @@ async def delete_category(
     current_admin: User = Depends(require_admin),
 ) -> None:
     """Supprime (soft-delete) une catégorie (admin uniquement)."""
-    result = await db.execute(Category.__table__.select().where(Category.id == category_id))
-    cat = result.scalar_one_or_none()
+    from sqlalchemy import select
+    result = await db.execute(select(Category).where(Category.id == category_id))
+    cat = result.scalars().first()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
     cat.deleted = True

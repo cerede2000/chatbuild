@@ -16,6 +16,9 @@ from passlib.context import CryptContext
 from .config import settings
 
 
+# Utilise pbkdf2_sha256 pour le hachage afin d'éviter les dépendances natives et
+# les limitations de longueur de mot de passe associées à bcrypt. La migration
+# vers pbkdf2 est transparente car passlib stocke l'algorithme utilisé dans le haché.
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 

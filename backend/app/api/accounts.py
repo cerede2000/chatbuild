@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..models.account import BankAccount
-from sqlalchemy import select
 from ..models.share import AccountShare
 from ..models.user import User
 from ..models.enums import PermissionLevel
@@ -21,14 +20,15 @@ router = APIRouter()
 @router.get("/accounts", response_model=list[AccountRead])
 async def list_accounts(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)) -> list[BankAccount]:
     """Retourne la liste des comptes accessibles à l’utilisateur courant."""
+    from sqlalchemy import select
     # Comptes dont l’utilisateur est propriétaire
     q1 = select(BankAccount).where(BankAccount.owner_id == current_user.id)
     result1 = await db.execute(q1)
     owned = result1.scalars().all()
     # Comptes partagés
     q2 = (
-        BankAccount.__table__.join(AccountShare, BankAccount.id == AccountShare.account_id)
-        .select()
+        select(BankAccount)
+        .join(AccountShare, BankAccount.id == AccountShare.account_id)
         .where(AccountShare.user_id == current_user.id)
     )
     result2 = await db.execute(q2)
@@ -81,9 +81,8 @@ async def share_account(
     Seul le propriétaire du compte peut partager ou modifier les partages.
     """
     # Vérifier l’existence du compte et la propriété
-    result = await db.execute(
-        select(BankAccount).where(BankAccount.id == account_id)
-    )
+    from sqlalchemy import select
+    result = await db.execute(select(BankAccount).where(BankAccount.id == account_id))
     account = result.scalars().first()
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found")
@@ -96,12 +95,12 @@ async def share_account(
     if share_in.permission not in PermissionLevel:
         raise HTTPException(status_code=400, detail="Invalid permission")
     # Vérifier si déjà partagé
-    exists = await db.execute(
+    result_share = await db.execute(
         select(AccountShare)
         .where(AccountShare.account_id == account_id)
         .where(AccountShare.user_id == share_in.user_id)
     )
-    share = exists.scalars().first()
+    share = result_share.scalars().first()
     if share:
         # Mise à jour de la permission
         share.permission = share_in.permission
