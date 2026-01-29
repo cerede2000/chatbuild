@@ -39,7 +39,8 @@ async def create_category(
     return cat
 
 
-@router.delete("/categories/{category_id}", status_code=204)
+# Retourne 200 (OK) car FastAPI refuse 204 avec un corps
+@router.delete("/categories/{category_id}", status_code=200)
 async def delete_category(
     category_id: int,
     db: AsyncSession = Depends(get_session),

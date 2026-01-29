@@ -67,7 +67,8 @@ def _get_account_or_404(db: AsyncSession, account_id: int) -> BankAccount:
     raise NotImplementedError  # placeholder pour Mypy
 
 
-@router.post("/accounts/{account_id}/shares", status_code=204)
+# Retourne 201 (Created) pour refléter la création ou mise à jour d’un partage
+@router.post("/accounts/{account_id}/shares", status_code=201)
 async def share_account(
     account_id: int,
     share_in: ShareCreate,
