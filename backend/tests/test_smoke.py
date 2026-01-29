@@ -5,6 +5,12 @@ certains composants critiques. Des tests plus complets (permissions,
 soft‑delete, récurrences) seront ajoutés dans les prochaines itérations.
 """
 
+import os
+import sys
+
+# Ajoute le dossier racine du projet au PYTHONPATH pour permettre l’import de `backend`
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 from backend.app.models.enums import PermissionLevel, AccountType, OperationType, RecurringFrequency
 
 
