@@ -61,7 +61,7 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api")
 
 # Monter les fichiers statiques du frontend si disponibles
-static_path = Path(__file__).resolve().parents[2] / "static"
+static_path = Path(__file__).resolve().parents[1] / "static"
 if static_path.exists():
     app.mount("/", StaticFiles(directory=str(static_path), html=True), name="static")
 
