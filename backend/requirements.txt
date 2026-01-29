@@ -7,7 +7,6 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 alembic==1.12.1
 python-multipart==0.0.9
-pendulum==2.1.2
 typing_extensions>=4.7
 pytest==7.4.0
 pytest-asyncio==0.21.1

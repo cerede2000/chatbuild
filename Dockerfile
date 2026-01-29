@@ -16,6 +16,9 @@ RUN npm run build
 # Étape backend : installation des dépendances
 ###############################################
 FROM python:3.12-slim AS python-base
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential libffi-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
