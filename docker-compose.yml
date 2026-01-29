@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: chatbuild_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - data:/app/data
+    environment:
+      # URL de connexion à la base. Utilise SQLite dans un volume Docker.
+      - DATABASE_URL=sqlite+aiosqlite:///app/data/db.sqlite3
+      # Secret pour signer les JWT (peut être laissé vide, un secret aléatoire sera généré).
+      - SECRET_KEY=${SECRET_KEY:-}
+      # Identifiant de l’utilisateur administrateur
+      - ADMIN_USERNAME=admin
+      # Mot de passe administrateur (laissé vide pour génération aléatoire). Ignoré après la première exécution.
+      - ADMIN_PASSWORD=
+      # Fuseau horaire par défaut (modifiable à l’initialisation)
+      - TZ=${TZ:-Europe/Paris}
+    restart: unless-stopped
+
+volumes:
+  data:
+    driver: local
