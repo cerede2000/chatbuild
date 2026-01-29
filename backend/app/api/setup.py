@@ -18,7 +18,8 @@ class SetupRequest(BaseModel):
     timezone: str = Field(..., max_length=64, description="Identifiant de fuseau horaire, ex : Europe/Paris")
 
 
-@router.post("/setup", status_code=204)
+# Utilise un code 201 (Created) pour éviter l'assertion de FastAPI (204 sans corps)
+@router.post("/setup", status_code=201)
 async def setup_app(data: SetupRequest, db: AsyncSession = Depends(get_session)) -> None:
     """Initialise la devise et le fuseau horaire globaux.
 
